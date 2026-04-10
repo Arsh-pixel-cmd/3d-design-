@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+body {
+    font-family: 'Noto Sans', sans-serif;
+    background-color: #060606; 
+    color: #e2e8f0;
+    margin: 0;
+    overflow-x: hidden;
+    touch-action: none; 
+}
+
+#tooltip {
+    position: absolute;
+    opacity: 0;
+    background: rgba(10, 10, 12, 0.9);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    pointer-events: none;
+    font-size: 13px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+    transition: opacity 0.2s ease;
+    z-index: 100;
+    transform: translate(-50%, -120%);
+    will-change: opacity, transform;
+}
+
+#chart-wrapper {
+    perspective: 2000px;
+}
+
+#orbit-group {
+    position: absolute;
+    width: 1200px;
+    height: 1200px;
+    top: 50%;
+    left: 50%;
+    margin-top: -600px;
+    margin-left: -600px;
+    transform-style: preserve-3d;
+    cursor: grab;
+    will-change: transform;
+}
+
+#orbit-group:active {
+    cursor: grabbing;
+}
+
+.layer-svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    overflow: visible !important;
+    pointer-events: none;
+    /* Explicitly push layers onto GPU */
+    transform: translateZ(0); 
+}
+
+.layer-interact {
+    pointer-events: auto !important;
+}
+
+.chart-element {
+    /* REMOVED 'filter' transition to prevent layout thrashing */
+    transition: opacity 0.3s ease; 
+}
+
+.chart-dimmed {
+    opacity: 0.05 !important;
+}
+
+.chart-highlight {
+    opacity: 1 !important;
+    /* Kept the glow strictly for highlights ONLY */
+    filter: url(#glow) !important;
+}
+
+.highlight-line {
+    stroke-width: 3px !important;
+    filter: url(#glow) !important;
+    opacity: 0.9 !important;
+}
+
+.highlight-text {
+    fill: #ffffff !important;
+    font-weight: 700 !important;
+    /* CSS drop-shadow is much faster than SVG filters for text */
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.7)); 
+}
+
+.legend-title {
+    writing-mode: vertical-rl;
+    transform: rotate(225deg);
+    text-align: left;
+    font-size: 9px;
+    color: #94a3b8;
+    white-space: nowrap;
+    height: 80px;
+    margin-bottom: 5px;
+}
+
+.pulse-text {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
+@keyframes spin-cw { 100% { transform: rotate(360deg); } }
+@keyframes spin-ccw { 100% { transform: rotate(-360deg); } }
+@keyframes pulse-scale {
+    0% { transform: scale(0.7); opacity: 0.4; }
+    50% { transform: scale(1.4); opacity: 1; }
+    100% { transform: scale(0.7); opacity: 0.4; }
+}
+/* Use GPU accelerated 3D transforms for spins */
+.spin-fast-cw { animation: spin-cw 12s linear infinite; transform-origin: 0 0; will-change: transform; }
+.spin-slow-ccw { animation: spin-ccw 22s linear infinite; transform-origin: 0 0; will-change: transform; }
+.spin-slow-cw { animation: spin-cw 35s linear infinite; transform-origin: 0 0; will-change: transform; }
+.core-pulse { animation: pulse-scale 3s ease-in-out infinite; transform-origin: 0 0; will-change: transform; opacity: 1; }
