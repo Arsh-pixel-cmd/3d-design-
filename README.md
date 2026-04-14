@@ -55,4 +55,4 @@ The engine accepts any JSON array. It is flexible and automatically detects comm
 The UI follows a modern **Glassmorphism** aesthetic, utilizing high-contrast HSL color palettes and SVG filters to create a premium "dashboard" feel. Every interaction is designed to be tactile—from the pulsing central core to the "Snap-to-2D" image reset.
 
 ---
-*Created as part of a high-fidelity data visualization internship project.*
+*Created as part of a high-fidelity data visualization*
