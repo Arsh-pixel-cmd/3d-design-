@@ -138,10 +138,10 @@ function debounce(fn, ms) {
 
 function getResponsiveScale() {
     const w = window.innerWidth;
-    if (w < 480) return 0.28; // Small mobile
-    if (w < 768) return 0.38; // Mobile
-    if (w < 1024) return 0.55; // Tablet
-    if (w < 1440) return 0.75; // Laptop
+    if (w < 480) return 0.22; // Small mobile (Zoomed out more)
+    if (w < 768) return 0.30; // Mobile (Zoomed out more)
+    if (w < 1024) return 0.50; // Tablet
+    if (w < 1440) return 0.70; // Laptop
     return 0.9; // Desktop
 }
 
@@ -188,17 +188,18 @@ function App() {
   };
 
   const resetCamera = () => {
+      const currentScale = getResponsiveScale();
       cameraRef.current.autoRotate = false;
       cameraRef.current.velX = 0;
       cameraRef.current.velZ = 0;
       cameraRef.current.currentRotX = 0;
       cameraRef.current.currentRotZ = 0;
-      cameraRef.current.targetZoomScale = initialZoom;
-      cameraRef.current.currentZoomScale = initialZoom;
+      cameraRef.current.targetZoomScale = currentScale;
+      cameraRef.current.currentZoomScale = currentScale;
       const orbitNode = document.getElementById("orbit-group");
       if (orbitNode) {
           orbitNode.style.transition = 'transform 0.8s cubic-bezier(0.2, 1, 0.3, 1)';
-          orbitNode.style.transform = `translateZ(0) scale(${initialZoom}) rotateX(0deg) rotateZ(0deg)`;
+          orbitNode.style.transform = `translateZ(0) scale(${currentScale}) rotateX(0deg) rotateZ(0deg)`;
           setTimeout(() => { orbitNode.style.transition = 'none'; }, 800);
       }
   };
@@ -552,27 +553,51 @@ function App() {
     const onMouseDown = (e) => { isDragging = true; cameraRef.current.autoRotate = false; lastX = e.clientX; lastY = e.clientY; };
     const onTouchStart = (e) => {
         cameraRef.current.autoRotate = false;
-        if (e.touches.length === 1) { isDragging = true; lastX = e.touches[0].clientX; lastY = e.touches[0].clientY; }
-        else if (e.touches.length === 2) { initialPinchDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); initialPinchZoom = cameraRef.current.targetZoomScale; }
+        
+        // Check if touch is on background (chart-wrapper) or on the chart itself
+        const isBackground = e.target.id === 'chart-wrapper' || e.target.classList.contains('layer-svg');
+        
+        if (e.touches.length === 1) { 
+            if (!isBackground) {
+                isDragging = true; 
+                lastX = e.touches[0].clientX; 
+                lastY = e.touches[0].clientY; 
+            }
+        }
+        else if (e.touches.length === 2) { 
+            initialPinchDistance = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY); 
+            initialPinchZoom = cameraRef.current.targetZoomScale; 
+        }
     };
+
     const onMouseMove = (e) => {
         if (!isDragging) return;
-        const dx = e.clientX - lastX; const dy = e.clientY - lastY;
-        lastX = e.clientX; lastY = e.clientY;
+        const dx = e.clientX - lastX; 
+        const dy = e.clientY - lastY;
+        lastX = e.clientX; 
+        lastY = e.clientY;
         const inv = Math.cos(cameraRef.current.currentRotX * Math.PI / 180) < 0 ? -1 : 1;
-        cameraRef.current.velZ += dx * sensitivity * inv; cameraRef.current.velX -= dy * sensitivity;
+        cameraRef.current.velZ += dx * sensitivity * inv; 
+        cameraRef.current.velX -= dy * sensitivity;
     };
+
     const onTouchMove = (e) => {
         if (e.touches.length === 1 && isDragging) {
-            const dx = e.touches[0].clientX - lastX; const dy = e.touches[0].clientY - lastY;
-            lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+            const dx = e.touches[0].clientX - lastX; 
+            const dy = e.touches[0].clientY - lastY;
+            lastX = e.touches[0].clientX; 
+            lastY = e.touches[0].clientY;
             const inv = Math.cos(cameraRef.current.currentRotX * Math.PI / 180) < 0 ? -1 : 1;
-            cameraRef.current.velZ += dx * sensitivity * 0.6 * inv; cameraRef.current.velX -= dy * sensitivity * 0.6;
+            cameraRef.current.velZ += dx * sensitivity * 0.6 * inv; 
+            cameraRef.current.velX -= dy * sensitivity * 0.6;
+            
+            // Only prevent default if we are actively dragging the chart to allow page scroll on background
+            if (e.cancelable) e.preventDefault();
         } else if (e.touches.length === 2 && initialPinchDistance) {
             const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
             cameraRef.current.targetZoomScale = Math.max(0.1, Math.min(initialPinchZoom * (dist / initialPinchDistance), 15));
+            if (e.cancelable) e.preventDefault();
         }
-        if (e.cancelable) e.preventDefault();
     };
     const onRelease = () => { isDragging = false; initialPinchDistance = null; };
 
